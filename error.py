@@ -11,3 +11,8 @@ class FailedRecvImg (Error) :
     def __init__ (self, expression, message) :
         self.expression = expression
         self.message = message
+
+class SocketClosedUnexpectedly (Error) :
+    def __init__ (self, expression, message) :
+        self.expression = expression
+        self.message = message
