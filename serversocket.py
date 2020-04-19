@@ -6,6 +6,7 @@
 #Sahas Munamala
 #4/15/2020
 import socket
+import threading
 from error import *
 
 #This class runs the serversocket logic. It spawns new ServerClientSocket which 
@@ -14,9 +15,14 @@ class ServerSocket :
     #basename: path of image to save
     #imgcount: number of image to save (prevents duplicate file names)
     def __init__ (self, host='127.0.0.1', port=1234, max_connections=10) :
-        self.ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.ss.bind((host,port))
-        self.ss.listen(max_connections)
+        self.host = host
+        self.port = port
+        try:
+            self.ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.ss.bind((host,port))
+            self.ss.listen(max_connections)
+        except socket.error as err :
+            print( "failed to create server socket" )
 
         self.basename = "./utils/images/image"
         self.imgcount = 0
@@ -26,8 +32,13 @@ class ServerSocket :
 
     #main run logic for a ServerSocket object
     def run(self) :
-        cl_socket, addr = self.ss.accept()
-        scs = ServerClientSocket(cl_socket, "%s%d" % (self.basename, self.imgcount))
+        while True:
+            cl_socket, addr = self.ss.accept()
+            scs = ServerClientSocket(cl_socket, "%s%d.jpg" % (self.basename, self.imgcount))
+            self.imgcount = self.imgcount + 1
+            threading.Thread(target = self.runclient(cl_socket, addr, scs))
+
+    def runclient(self, cl_socket, addr, scs) :
         try:
             scs.run()
         finally:
