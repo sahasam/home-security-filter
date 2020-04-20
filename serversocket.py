@@ -31,16 +31,17 @@ class ServerSocket :
         self.ss.close()
 
     #main run logic for a ServerSocket object
-    def run(self) :
+    def run(self, q) :
         while True:
             cl_socket, addr = self.ss.accept()
-            scs = ServerClientSocket(cl_socket, "%s%d.jpg" % (self.basename, self.imgcount))
+            imagepath = "%s%d.jpg" % (self.basename, self.imgcount)
+            scs = ServerClientSocket(cl_socket, imagepath)
             self.imgcount = self.imgcount + 1
-            threading.Thread(target = self.runclient(cl_socket, addr, scs))
+            threading.Thread(target = self.runclient(cl_socket, addr, scs, q))
 
-    def runclient(self, cl_socket, addr, scs) :
+    def runclient(self, cl_socket, addr, scs, q) :
         try:
-            scs.run()
+            scs.run(q)
         finally:
             scs.close()
 
@@ -94,11 +95,12 @@ class ServerClientSocket :
         print( 'done recv image' )
 
     #main logic loop of a ServerClientSocket
-    def run(self) :
+    def run(self, q) :
         myFile = open(self.imgpath, 'wb')
         try:
             size = self.recvImgSize()
             self.recvImg(myFile, size)
+            q.put(self.imgpath)
         except FailedRecvSize as err :
             print( "Failed to receive size from socket. Check connection" )
         finally :
