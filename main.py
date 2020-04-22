@@ -4,10 +4,11 @@
 #Author: Sahas Munamala
 #Date: 04/19/2020
 
-from queue import Queue
-import time
+import sys
+sys.path.append('./networking')
 
 from serversocket import ServerSocketThread
+from queue import Queue
 import odmodel
 
 def Main() :
@@ -21,7 +22,7 @@ def Main() :
     #load in tfmodel
 
     #main loop: whenever queue has something in it, read it and
-    #put it in a queue
+    #           send it to the odm
     while True :
         image = q.get()
         print( "new image in queue detected" )
