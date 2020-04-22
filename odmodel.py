@@ -1,6 +1,6 @@
 ##### Using the raspberry pi to detect people in security camera pictures
 #
-# AUthor: Sahas Munamala
+# Author: Sahas Munamala
 # Date: 4/5/2020
 # Description:
 # This object of this program is to detect which images from the security camera 
@@ -35,7 +35,9 @@ class odmodel :
         self.NUM_CLASSES = 90
 
         self.label_map = label_map_util.load_labelmap(self.PATH_TO_LABELS)
-        self.categories = label_map_util.convert_label_map_to_categories(self.label_map, max_num_classes=self.NUM_CLASSES, use_display_name=True)
+        self.categories = label_map_util.convert_label_map_to_categories(self.label_map, \
+                max_num_classes=self.NUM_CLASSES, \
+                use_display_name=True)
         self.category_index = label_map_util.create_category_index(self.categories)
 
         detection_graph = tf.Graph()
@@ -56,8 +58,13 @@ class odmodel :
 
         self.num_detections = detection_graph.get_tensor_by_name('num_detections:0')
 
-    def runModel (self, frame_expanded, frame) :
-        (boxes, scores, classes, num) = self.sess.run([self.detection_boxes, self.detection_scores, self.detection_classes, self.num_detections], feed_dict={self.image_tensor: frame_expanded})
+    def _runmodel (self, frame_expanded, frame) :
+        print( "Running model" )
+        (boxes, scores, classes, num) = self.sess.run([self.detection_boxes, \
+                self.detection_scores, \
+                self.detection_classes, \
+                self.num_detections], \
+                feed_dict={self.image_tensor: frame_expanded})
         vis_util.visualize_boxes_and_labels_on_image_array(
             frame,
             np.squeeze(boxes),
@@ -70,16 +77,17 @@ class odmodel :
 
         return (boxes, scores, classes, num)
 
-    def run_image (self, imagefile) :
+    def runimage (self, imagefile) :
         frame = cv2.imread(imagefile, cv2.IMREAD_COLOR)
         frame.setflags(write=1)
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         frame_expanded = np.expand_dims(frame_rgb, axis=0)
 
-        (boxes, scores, classes, num) = self.runModel(frame_expanded, frame)
+        (boxes, scores, classes, num) = self._runmodel(frame_expanded, frame)
         return (boxes, scores, classes, num)
 
 if __name__ == "__main__" :
     odm = odmodel()
-    odm.run_image('/home/pi/git/camFilter/utils/images/person-3.jpg')
+    (boxes, scores, classes, num) = odm.run_image('/home/sahas/Desktop/Wallpapers/nomanssky2.jpg')
+    print("finished model" )
 

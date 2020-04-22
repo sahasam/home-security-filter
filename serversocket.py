@@ -9,6 +9,22 @@ import socket
 import threading
 from error import *
 
+
+class ServerSocketThread (threading.Thread) :
+    """This class serves as the threading wrapper
+    around the serversocket class. It extends
+    threading.Thread and takes in the queue. As new
+    clients connect to the server and send over images,
+    they are put into the queue for processing by the
+    tfmodel thread"""
+    def __init__ (self, q) :
+        threading.Thread.__init__(self)
+        self.q = q
+
+    def run(self) :
+        ss = ServerSocket()
+        ss.run(self.q)
+
 #This class runs the serversocket logic. It spawns new ServerClientSocket which 
 #accept images from incoming connections
 class ServerSocket :
@@ -111,8 +127,10 @@ class ServerClientSocket :
 
 
 if( __name__ == "__main__" ):
+    import queue
     print( "Testing server socket --- " )
-    ss = ServerSocket()
-    ss.run()
+    q = queue.Queue()
+    ss = ServerSocketThread(q)
+    ss.start()
     print( "Successfully reached end. Closing" )
 
