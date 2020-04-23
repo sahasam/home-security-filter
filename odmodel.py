@@ -18,13 +18,14 @@ import sys
 from utils import label_map_util
 from utils import visualization_utils as vis_util
 
+THRESHOLD = 0.5
+
 class odmodel :
     """
     This class abstracts the tensorflow model so its main functions
     can be used without concern for the lower-level implementation
     """
-    def __init__ (self) :#, #q)
-    #    self.q = q
+    def __init__ (self) :
 
         self.MODEL_NAME = 'ssdlite_mobilenet_v2_coco_2018_05_09'
         self.CWD_PATH = os.getcwd()
@@ -58,6 +59,9 @@ class odmodel :
         self.num_detections = detection_graph.get_tensor_by_name('num_detections:0')
 
     def _runmodel (self, frame_expanded, frame) :
+        #TODO: look at removing vis_util.visualize... because it might be taking a bulk
+        #       of unecessary processing time. Down the road, add an option to give
+        #       boxes around objects
         print( "Running model" )
         (boxes, scores, classes, num) = self.sess.run([self.detection_boxes, \
                 self.detection_scores, \
@@ -83,15 +87,29 @@ class odmodel :
         frame_expanded = np.expand_dims(frame_rgb, axis=0)
 
         (boxes, scores, classes, num) = self._runmodel(frame_expanded, frame)
-        return (boxes, scores, classes, num)
 
-    def findperson (self, imagefile) :
-        """ returns whether or not a person is inside an image
+    def findPerson (self, imagefile) :
+        frame = cv2.imread(imagefile, cv2.IMREAD_COLOR)
+        frame.setflags(write=1)
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        frame_expanded = np.expand_dims(frame_rgb, axis=0)
 
-        This function searches the inputted image for people.
-        Returns true if a person is found, returns false if
-        there are no people in the image
-        """
+        (boxes, scores, classes, num) = self._runmodel(frame_expanded, frame)
+
+
+        if (classes is not None) :
+            objects = []
+            for index, value in enumerate(classes[0]):
+                object_dict = {}
+                if scores[0, index] > THRESHOLD:
+                    object_dict[(self.category_index.get(value)).get('name').encode('utf8')] = \
+                                        scores[0, index]
+                    objects.append(object_dict)
+            print( objects )
+            return True
+
+        return False
+
 if __name__ == "__main__" :
     odm = odmodel()
     (boxes, scores, classes, num) = odm.run_image('/home/sahas/Desktop/Wallpapers/nomanssky2.jpg')

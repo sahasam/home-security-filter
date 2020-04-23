@@ -7,9 +7,9 @@
 from networking import serversocket
 from queue import Queue
 import odmodel
-#import logging
+import logging
 
-#logging.basicConfig(filename='logs/app.log', level=logging.DEBUG, format='%(asctime)s : %(levelname)s:%(message)s')
+logging.basicConfig(filename='logs/app.log', level=logging.INFO, format='%(asctime)s : %(levelname)s:%(message)s')
 
 def Main() :
     #Create queues
@@ -23,18 +23,19 @@ def Main() :
     ss = serversocket.ServerSocketThread(input_q, output_q)
     ss.start()
 
-    #load in tfmodel
-
     #main loop: whenever queue has something in it, read it and
     #           send it to the odm
     while True :
         image = input_q.get()
-        print( "new image in queue detected" )
+        logging.info( "new image in queue detected" )
 
         #create tfmodelthread and start it
         odm = odmodel.odmodel()
-        (boxes, scores, classes, num) = odm.runimage(image)
-        print("scores: ", str(classes))
+        if ( odm.findPerson(image) ) :
+            logging.info( "person in image has been found" )
+
+        #with the given information, find out if a person is inside
+
     print( "Closing" )
 
 if __name__ == "__main__" :
