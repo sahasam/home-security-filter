@@ -13,7 +13,6 @@ import os
 import cv2
 import numpy as np
 import tensorflow as tf
-import argparse
 import sys
 
 from utils import label_map_util
@@ -86,6 +85,13 @@ class odmodel :
         (boxes, scores, classes, num) = self._runmodel(frame_expanded, frame)
         return (boxes, scores, classes, num)
 
+    def findperson (self, imagefile) :
+        """ returns whether or not a person is inside an image
+
+        This function searches the inputted image for people.
+        Returns true if a person is found, returns false if
+        there are no people in the image
+        """
 if __name__ == "__main__" :
     odm = odmodel()
     (boxes, scores, classes, num) = odm.run_image('/home/sahas/Desktop/Wallpapers/nomanssky2.jpg')

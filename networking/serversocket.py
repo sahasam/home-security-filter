@@ -7,7 +7,9 @@
 #4/15/2020
 import socket
 import threading
+import time
 
+BUFSIZE=2048
 
 class ServerSocketThread (threading.Thread) :
     """This class serves as the threading wrapper
@@ -16,13 +18,15 @@ class ServerSocketThread (threading.Thread) :
     clients connect to the server and send over images,
     they are put into the queue for processing by the
     tfmodel thread"""
-    def __init__ (self, q) :
+    def __init__ (self, input_q, output_q) :
         threading.Thread.__init__(self)
-        self.q = q
+        self.input_q = input_q
+        self.output_q = output_q
 
     def run(self) :
         ss = ServerSocket()
-        ss.run(self.q)
+        self.output_q.put(ss)
+        ss.run(self.input_q)
 
 #This class runs the serversocket logic. It spawns new ServerClientSocket which 
 #accept images from incoming connections
@@ -46,59 +50,62 @@ class ServerSocket :
         self.ss.close()
 
     #main run logic for a ServerSocket object
-    def run(self, q) :
+    def run(self, input_q) :
         while True:
             cl_socket, addr = self.ss.accept()
             imagepath = "%s%d.jpg" % (self.basename, self.imgcount)
-            scs = ServerClientSocket(cl_socket, imagepath)
+            scs = ServerCommSocket(cl_socket, imagepath)
             self.imgcount = self.imgcount + 1
-            threading.Thread(target = self.runclient(cl_socket, addr, scs, q))
+            threading.Thread(target = self.runclient(cl_socket, addr, scs, input_q))
 
-    def runclient(self, cl_socket, addr, scs, q) :
+    def runclient(self, cl_socket, addr, scs, input_q) :
         try:
-            scs.run(q)
+            scs.run(input_q)
         finally:
             scs.close()
 
+class ClientSocket :
+    def __init__ ( self, host='127.0.0.1', port=1234 ) :
+        self.host = host
+        self.port = port
+        try:
+            self.cs = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.cs.connect((host,port))
+        except socket.error as err :
+            print( "could not open socket" )
+
+    def run (self, imgpath) :
+        ccs = ClientCommSocket(self.cs, imgpath)
+        ccs.run()
+
 #This class reads image data from socket and saves it to a file before
 #closing
-class ServerClientSocket :
-
+class CommSocket :
     #cl_socket: socket object that ServerClientSocket controls
     #imgpath: full path of file to save image to 
-    def __init__ (self, cl_socket, imgpath) :
+    def __init__ (self, cl_socket) :
         self.cl_socket = cl_socket
-        self.imgpath = imgpath
-
-    def close(self) :
-        self.cl_socket.close()
-
     #receive the image size from the socket
-    def recvImgSize(self) :
-        BUFSIZE = 2048
+    def _recvImgSize(self) :
         data = self.cl_socket.recv(BUFSIZE)
         msg = data.decode()
         if( msg.startswith("SIZE") ):
-            print( 'received size marker' )
             size = int(msg.split()[1])
+            print( "collected size: ", size)
             self.cl_socket.send("20".encode())
             return size
         else :
-            print( 'failed to receive size marker' )
             self.cl_socket.send("19".encode())
             self.cl_socket.close()
             raise FailedRecvSize('oops', 'something went wrong')
-
         return -1
 
     #receive the image data from the socket
-    def recvImg(self, myFile, size) :
-        BUFSIZE = 2048
+    def _recvImgData(self, myFile, size) :
         totaldata = 0
         while True :
             data = self.cl_socket.recv(BUFSIZE)
             if data :
-                #print( 'receiving image' )
                 myFile.write(data)
                 totaldata += len(data)
             else :
@@ -109,27 +116,71 @@ class ServerClientSocket :
                 self.cl_socket.send("22".encode())
         print( 'done recv image' )
 
-    #main logic loop of a ServerClientSocket
-    def run(self, q) :
-        myFile = open(self.imgpath, 'wb')
-        try:
-            size = self.recvImgSize()
-            self.recvImg(myFile, size)
-            q.put(self.imgpath)
-        except FailedRecvSize as err :
-            print( "Failed to receive size from socket. Check connection" )
-        finally :
-            myFile.close()
+    def _sendSize(self, bits) :
+        msg = "SIZE %s" % len(bits)
+        self.cl_socket.sendall(msg.encode())
+        answer = self.cl_socket.recv(BUFSIZE)
+
+        if( answer.decode() == "20" ): # server successfully received image size
+            print( "client received image size" )
+            return True
+        return False
+
+    def _sendImgData(self, bits) :
+        self.cl_socket.sendall(bits)
+        answer = self.cl_socket.recv(BUFSIZE) # get response code
+        if( answer.decode() == "22" ): # server successfully received image
+            print( "SUCCESS: sent image to server" )
+            return True
+        elif( answer.decode() == "21" ): # server failed to receive image
+            print( "FAILED: send image to server" )
 
     def close(self) :
         self.cl_socket.close()
 
+class ServerCommSocket (CommSocket) :
+    def __init__ (self, cl_socket, imgpath) :
+        super().__init__(cl_socket)
+        self.imgpath = imgpath
+
+    def run (self, input_q) :
+        myFile = open(self.imgpath, 'wb')
+        try:
+            size = self._recvImgSize()
+            self._recvImgData(myFile, size)
+            input_q.put(self.imgpath)
+        finally:
+            self.close()
+        print( "Finished Serverside Socket Communication" )
+
+class ClientCommSocket (CommSocket) :
+    def __init__ (self, cl_socket, imgpath) :
+        super().__init__(cl_socket)
+        self.cl_socket = cl_socket
+        self.imgpath = imgpath
+
+    def run (self) :
+        try:
+            myFile = open(self.imgpath, 'rb')
+            bits = myFile.read()
+            if( self._sendSize(bits) ):
+                self._sendImgData(bits)
+            else :
+                print( "failed to send size" )
+        except OSError as err :
+            print( "Failed to open file" )
+        finally :
+            self.close()
+        print( "Finished Clientside Socket Communication" )
 
 if( __name__ == "__main__" ):
-    import queue
+    from queue import Queue
     print( "Testing server socket --- " )
-    q = queue.Queue()
-    ss = ServerSocketThread(q)
+    input_q = Queue()
+    output_q = Queue()
+    ss = ServerSocketThread(input_q, output_q)
     ss.start()
+    while True :
+        ext = input_q.get()
+        print( "input queue has been populated with", str(ext) )
     print( "Successfully reached end. Closing" )
-

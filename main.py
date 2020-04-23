@@ -4,19 +4,23 @@
 #Author: Sahas Munamala
 #Date: 04/19/2020
 
-import sys
-sys.path.append('./networking')
-
-from serversocket import ServerSocketThread
+from networking import serversocket
 from queue import Queue
 import odmodel
+#import logging
+
+#logging.basicConfig(filename='logs/app.log', level=logging.DEBUG, format='%(asctime)s : %(levelname)s:%(message)s')
 
 def Main() :
-    #Create queue
-    q = Queue()
+    #Create queues
+
+    #input_q holds filenames that point towards images to process
+    input_q = Queue()
+    #output_q holds socket objects in an order that matches input_q
+    output_q = Queue()
 
     #Create serversocket thread
-    ss = ServerSocketThread(q)
+    ss = serversocket.ServerSocketThread(input_q, output_q)
     ss.start()
 
     #load in tfmodel
@@ -24,7 +28,7 @@ def Main() :
     #main loop: whenever queue has something in it, read it and
     #           send it to the odm
     while True :
-        image = q.get()
+        image = input_q.get()
         print( "new image in queue detected" )
 
         #create tfmodelthread and start it
