@@ -16,7 +16,6 @@ import tensorflow as tf
 import sys
 
 from utils import label_map_util
-from utils import visualization_utils as vis_util
 
 THRESHOLD = 0.5
 
@@ -59,25 +58,12 @@ class odmodel :
         self.num_detections = detection_graph.get_tensor_by_name('num_detections:0')
 
     def _runmodel (self, frame_expanded, frame) :
-        #TODO: look at removing vis_util.visualize... because it might be taking a bulk
-        #       of unecessary processing time. Down the road, add an option to give
-        #       boxes around objects
         print( "Running model" )
         (boxes, scores, classes, num) = self.sess.run([self.detection_boxes, \
                 self.detection_scores, \
                 self.detection_classes, \
                 self.num_detections], \
                 feed_dict={self.image_tensor: frame_expanded})
-        vis_util.visualize_boxes_and_labels_on_image_array(
-            frame,
-            np.squeeze(boxes),
-            np.squeeze(classes).astype(np.int32),
-            np.squeeze(scores),
-            self.category_index,
-            use_normalized_coordinates=True,
-            line_thickness=8,
-            min_score_thresh=0.40)
-
         return (boxes, scores, classes, num)
 
     def runimage (self, imagefile) :
