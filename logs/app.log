@@ -1,0 +1,65 @@
+2020-04-23 20:51:47,187 : INFO:new image in queue detected
+2020-04-23 20:51:47,187 : WARNING:From /home/sahas/dev/home-security-filter/utils/label_map_util.py:138: The name tf.gfile.GFile is deprecated. Please use tf.io.gfile.GFile instead.
+
+2020-04-23 20:51:47,207 : WARNING:From /home/sahas/dev/home-security-filter/odmodel.py:44: The name tf.GraphDef is deprecated. Please use tf.compat.v1.GraphDef instead.
+
+2020-04-23 20:51:48,064 : WARNING:From /home/sahas/dev/home-security-filter/odmodel.py:50: The name tf.Session is deprecated. Please use tf.compat.v1.Session instead.
+
+2020-04-23 20:51:50,302 : DEBUG:STREAM b'IHDR' 16 13
+2020-04-23 20:51:50,302 : DEBUG:STREAM b'IDAT' 41 1216
+2020-04-23 20:52:37,163 : INFO:new image in queue detected
+2020-04-23 20:52:37,163 : WARNING:From /home/sahas/dev/home-security-filter/utils/label_map_util.py:138: The name tf.gfile.GFile is deprecated. Please use tf.io.gfile.GFile instead.
+
+2020-04-23 20:52:37,183 : WARNING:From /home/sahas/dev/home-security-filter/odmodel.py:44: The name tf.GraphDef is deprecated. Please use tf.compat.v1.GraphDef instead.
+
+2020-04-23 20:52:38,028 : WARNING:From /home/sahas/dev/home-security-filter/odmodel.py:50: The name tf.Session is deprecated. Please use tf.compat.v1.Session instead.
+
+2020-04-23 20:52:40,238 : DEBUG:STREAM b'IHDR' 16 13
+2020-04-23 20:52:40,238 : DEBUG:STREAM b'IDAT' 41 1216
+2020-04-23 20:53:04,066 : INFO:new image in queue detected
+2020-04-23 20:53:04,067 : WARNING:From /home/sahas/dev/home-security-filter/utils/label_map_util.py:138: The name tf.gfile.GFile is deprecated. Please use tf.io.gfile.GFile instead.
+
+2020-04-23 20:53:04,087 : WARNING:From /home/sahas/dev/home-security-filter/odmodel.py:44: The name tf.GraphDef is deprecated. Please use tf.compat.v1.GraphDef instead.
+
+2020-04-23 20:53:04,936 : WARNING:From /home/sahas/dev/home-security-filter/odmodel.py:50: The name tf.Session is deprecated. Please use tf.compat.v1.Session instead.
+
+2020-04-23 20:53:07,213 : DEBUG:STREAM b'IHDR' 16 13
+2020-04-23 20:53:07,213 : DEBUG:STREAM b'IDAT' 41 1216
+2020-04-23 21:31:13,483 : INFO:new image in queue detected
+2020-04-23 21:31:13,483 : WARNING:From /home/sahas/dev/home-security-filter/utils/label_map_util.py:138: The name tf.gfile.GFile is deprecated. Please use tf.io.gfile.GFile instead.
+
+2020-04-23 21:31:13,503 : WARNING:From /home/sahas/dev/home-security-filter/odmodel.py:44: The name tf.GraphDef is deprecated. Please use tf.compat.v1.GraphDef instead.
+
+2020-04-23 21:31:14,345 : WARNING:From /home/sahas/dev/home-security-filter/odmodel.py:50: The name tf.Session is deprecated. Please use tf.compat.v1.Session instead.
+
+2020-04-23 21:35:15,401 : INFO:new image in queue detected
+2020-04-23 21:35:15,402 : WARNING:From /home/sahas/dev/home-security-filter/utils/label_map_util.py:138: The name tf.gfile.GFile is deprecated. Please use tf.io.gfile.GFile instead.
+
+2020-04-23 21:35:15,422 : WARNING:From /home/sahas/dev/home-security-filter/odmodel.py:44: The name tf.GraphDef is deprecated. Please use tf.compat.v1.GraphDef instead.
+
+2020-04-23 21:35:16,277 : WARNING:From /home/sahas/dev/home-security-filter/odmodel.py:50: The name tf.Session is deprecated. Please use tf.compat.v1.Session instead.
+
+2020-04-23 21:36:51,113 : INFO:new image in queue detected
+2020-04-23 21:36:51,113 : WARNING:From /home/sahas/dev/home-security-filter/utils/label_map_util.py:138: The name tf.gfile.GFile is deprecated. Please use tf.io.gfile.GFile instead.
+
+2020-04-23 21:36:51,133 : WARNING:From /home/sahas/dev/home-security-filter/odmodel.py:44: The name tf.GraphDef is deprecated. Please use tf.compat.v1.GraphDef instead.
+
+2020-04-23 21:36:51,983 : WARNING:From /home/sahas/dev/home-security-filter/odmodel.py:50: The name tf.Session is deprecated. Please use tf.compat.v1.Session instead.
+
+2020-04-23 21:38:43,904 : INFO:new image in queue detected
+2020-04-23 21:38:43,904 : WARNING:From /home/sahas/dev/home-security-filter/utils/label_map_util.py:138: The name tf.gfile.GFile is deprecated. Please use tf.io.gfile.GFile instead.
+
+2020-04-23 21:38:43,925 : WARNING:From /home/sahas/dev/home-security-filter/odmodel.py:44: The name tf.GraphDef is deprecated. Please use tf.compat.v1.GraphDef instead.
+
+2020-04-23 21:38:44,787 : WARNING:From /home/sahas/dev/home-security-filter/odmodel.py:50: The name tf.Session is deprecated. Please use tf.compat.v1.Session instead.
+
+2020-04-23 21:39:09,329 : INFO:new image in queue detected
+2020-04-23 21:39:09,329 : WARNING:From /home/sahas/dev/home-security-filter/utils/label_map_util.py:138: The name tf.gfile.GFile is deprecated. Please use tf.io.gfile.GFile instead.
+
+2020-04-23 21:39:09,351 : WARNING:From /home/sahas/dev/home-security-filter/odmodel.py:45: The name tf.GraphDef is deprecated. Please use tf.compat.v1.GraphDef instead.
+
+2020-04-23 21:39:10,202 : WARNING:From /home/sahas/dev/home-security-filter/odmodel.py:51: The name tf.Session is deprecated. Please use tf.compat.v1.Session instead.
+
+2020-04-23 21:39:12,398 : INFO:person in image has been found
+2020-04-23 21:44:02,199 : INFO:new image in queue detected
+2020-04-23 21:44:05,361 : INFO:person in image has been found
