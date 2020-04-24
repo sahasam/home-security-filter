@@ -28,6 +28,7 @@ class ServerSocketThread (threading.Thread) :
         self.output_q.put(ss)
         ss.run(self.input_q)
 
+
 #This class runs the serversocket logic. It spawns new ServerClientSocket which 
 #accept images from incoming connections
 class ServerSocket :
@@ -64,6 +65,7 @@ class ServerSocket :
         finally:
             scs.close()
 
+
 class ClientSocket :
     def __init__ ( self, host='127.0.0.1', port=1234 ) :
         self.host = host
@@ -81,12 +83,27 @@ class ClientSocket :
 #This class reads image data from socket and saves it to a file before
 #closing
 class CommSocket :
-    #cl_socket: socket object that ServerClientSocket controls
-    #imgpath: full path of file to save image to 
+    """This class handles low level implementation of socket
+    communication. This class is not intended to be used directly,
+    but gives classes that inherit it functions to send and recv images
+    """
     def __init__ (self, cl_socket) :
+        """
+        cl_socket: socket where commmunication is managed
+        """
         self.cl_socket = cl_socket
-    #receive the image size from the socket
+
     def _recvImgSize(self) :
+        """Receive the size of the image from the socket.
+        Assumes that the other side is trying to send image size.
+
+        Codes:
+        20: Successfully received image size
+        19: Failed to recieve image size
+
+        Returns:
+        size if successful, or -1 if failed
+        """
         data = self.cl_socket.recv(BUFSIZE)
         msg = data.decode()
         if( msg.startswith("SIZE") ):
@@ -100,8 +117,18 @@ class CommSocket :
             raise FailedRecvSize('oops', 'something went wrong')
         return -1
 
-    #receive the image data from the socket
     def _recvImgData(self, myFile, size) :
+        """Receives actual image data from the socket
+        Assumes the other side is trying to send image data.
+
+        Parameters:
+        myFile  : opened output file to write image data to
+        size    : number of bits to receive
+
+        Codes:
+        21  : socket closed before full image could be sent
+        22  : received full image from socket successfully
+        """
         totaldata = 0
         while True :
             data = self.cl_socket.recv(BUFSIZE)
@@ -117,6 +144,16 @@ class CommSocket :
         print( 'done recv image' )
 
     def _sendSize(self, bits) :
+        """Send size of image to other socket.
+        Assumes the other side is ready to receive image size
+
+        Parameters:
+        bits    : raw image data that is measured and sent
+
+        Returns:
+        True    : image size sent successfully
+        False   : image size not sent successfully
+        """
         msg = "SIZE %s" % len(bits)
         self.cl_socket.sendall(msg.encode())
         answer = self.cl_socket.recv(BUFSIZE)
@@ -127,6 +164,16 @@ class CommSocket :
         return False
 
     def _sendImgData(self, bits) :
+        """Send image data to other socket
+        Assumes that other socket is ready to receive.
+
+        Parameters:
+        bits    : raw image data that is measured and sent
+
+        Returns :
+        True: destination socket received image data
+        False: image data not sent successfully
+        """
         self.cl_socket.sendall(bits)
         answer = self.cl_socket.recv(BUFSIZE) # get response code
         if( answer.decode() == "22" ): # server successfully received image
@@ -136,14 +183,31 @@ class CommSocket :
             print( "FAILED: send image to server" )
 
     def close(self) :
+        """Close socket for further use"""
         self.cl_socket.close()
 
+
 class ServerCommSocket (CommSocket) :
+    """This class handles communication from the server's side
+    of the program. It receives images from the client for
+    processing and sends back images that actually contain people.
+    """
     def __init__ (self, cl_socket, imgpath) :
+        """__init__ for ServerCommSocket
+
+        Parameters:
+        cl_socket : socket that communicates with client
+        imgpath   : path to save the image received to
+        """
         super().__init__(cl_socket)
         self.imgpath = imgpath
 
     def run (self, input_q) :
+        """Method that handles run logic for Server Socket
+
+        Parameters:
+        input_q: queue to place image after receiving for further processing
+        """
         myFile = open(self.imgpath, 'wb')
         try:
             size = self._recvImgSize()
@@ -153,13 +217,25 @@ class ServerCommSocket (CommSocket) :
             self.close()
         print( "Finished Serverside Socket Communication" )
 
+
 class ClientCommSocket (CommSocket) :
+    """Handles communication from the client's side of the program.
+    It sends images to the server for processing and waits to see if
+    the server found a person in the image"
+    """
     def __init__ (self, cl_socket, imgpath) :
+        """__init__ for ClientCommSocket
+
+        Parameters:
+        cl_socket : socket that communicates with server
+        imgpath   : filesystem location of image to be sent
+        """
         super().__init__(cl_socket)
         self.cl_socket = cl_socket
         self.imgpath = imgpath
 
     def run (self) :
+        """Method that handles run logic for CLient Socket"""
         try:
             myFile = open(self.imgpath, 'rb')
             bits = myFile.read()
@@ -172,6 +248,7 @@ class ClientCommSocket (CommSocket) :
         finally :
             self.close()
         print( "Finished Clientside Socket Communication" )
+
 
 if( __name__ == "__main__" ):
     from queue import Queue
