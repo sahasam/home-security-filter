@@ -32,8 +32,9 @@ class ServerSocketThread (threading.Thread) :
 #This class runs the serversocket logic. It spawns new ServerClientSocket which 
 #accept images from incoming connections
 class ServerSocket :
-    #basename: path of image to save
-    #imgcount: number of image to save (prevents duplicate file names)
+    """Handles the process of accepting connections
+    and spawning threads to receive images from clients
+    """
     def __init__ (self, host='127.0.0.1', port=1234, max_connections=10) :
         self.host = host
         self.port = port
@@ -50,7 +51,6 @@ class ServerSocket :
     def close(self) :
         self.ss.close()
 
-    #main run logic for a ServerSocket object
     def run(self, input_q) :
         while True:
             cl_socket, addr = self.ss.accept()
@@ -235,7 +235,9 @@ class ClientCommSocket (CommSocket) :
         self.imgpath = imgpath
 
     def run (self) :
-        """Method that handles run logic for CLient Socket"""
+        """ Run method that handles communication from the client's
+        side of the program. It sends images to the server and waits
+        for the server to say if it finds a person or not"""
         try:
             myFile = open(self.imgpath, 'rb')
             bits = myFile.read()
