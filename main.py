@@ -32,8 +32,7 @@ def Main() :
         #create tfmodelthread and start it
         odm = odmodel.odmodel()
         if ( odm.findPerson(image) ) :
-            logging.info( "person in image has been found" )
-
+            logging.info("person has been found")
         #with the given information, find out if a person is inside
 
     print( "Closing" )

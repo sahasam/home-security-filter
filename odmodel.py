@@ -14,6 +14,9 @@ import cv2
 import numpy as np
 import tensorflow as tf
 import sys
+import logging
+
+logging.basicConfig(filename='logs/model.log', level=logging.INFO, format='%(asctime)s : %(levelname)s: %(message)s')
 
 from utils import label_map_util
 
@@ -75,6 +78,17 @@ class odmodel :
         (boxes, scores, classes, num) = self._runmodel(frame_expanded, frame)
 
     def findPerson (self, imagefile) :
+        """Find a person in a given image
+        Run imagefile through object detection model and parse the output for
+        indication of a person
+
+        Parameters:
+        imagefile   : filesystem path to image to process
+
+        Returns:
+        True    : Person has been detected in image
+        False   : No Person inside the image
+        """
         frame = cv2.imread(imagefile, cv2.IMREAD_COLOR)
         frame.setflags(write=1)
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -82,19 +96,15 @@ class odmodel :
 
         (boxes, scores, classes, num) = self._runmodel(frame_expanded, frame)
 
-
         if (classes is not None) :
-            objects = []
-            for index, value in enumerate(classes[0]):
-                object_dict = {}
-                if scores[0, index] > THRESHOLD:
-                    object_dict[(self.category_index.get(value)).get('name').encode('utf8')] = \
-                                        scores[0, index]
-                    objects.append(object_dict)
-            print( objects )
-            return True
-
+            confidence = scores[0,0]
+            logging.info("confidence: %f" % confidence)
+            if confidence > THRESHOLD:
+                logging.info("person detected")
+                return True
         return False
+
+
 
 if __name__ == "__main__" :
     odm = odmodel()
