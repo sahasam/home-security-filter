@@ -23,10 +23,10 @@ class ServerSocketThread (threading.Thread) :
         self.input_q = input_q
         self.output_q = output_q
 
+
     def run(self) :
         ss = ServerSocket()
-        self.output_q.put(ss)
-        ss.run(self.input_q)
+        ss.run(self.input_q, self.output_q)
 
 
 #This class runs the serversocket logic. It spawns new ServerClientSocket which 
@@ -48,20 +48,22 @@ class ServerSocket :
         self.basename = "./utils/images/image"
         self.imgcount = 0
 
+        self.lock = threading.Lock()
+
     def close(self) :
         self.ss.close()
 
-    def run(self, input_q) :
+    def run(self, input_q, output_q) :
         while True:
             cl_socket, addr = self.ss.accept()
             imagepath = "%s%d.jpg" % (self.basename, self.imgcount)
             scs = ServerCommSocket(cl_socket, imagepath)
             self.imgcount = self.imgcount + 1
-            threading.Thread(target = self.runclient(cl_socket, addr, scs, input_q))
+            threading.Thread(target = self.runclient(scs, input_q, output_q))
 
-    def runclient(self, cl_socket, addr, scs, input_q) :
+    def runclient(self, scs, input_q, output_q) :
         try:
-            scs.run(input_q)
+            scs.run(input_q, output_q, self.lock)
         finally:
             scs.close()
 
@@ -110,6 +112,7 @@ class CommSocket :
             size = int(msg.split()[1])
             print( "collected size: ", size)
             self.cl_socket.send("20".encode())
+            print( "sent 20" )
             return size
         else :
             self.cl_socket.send("19".encode())
@@ -131,16 +134,18 @@ class CommSocket :
         """
         totaldata = 0
         while True :
-            data = self.cl_socket.recv(BUFSIZE)
+            data = self.cl_socket.recv(size)
+            #print (data)
             if data :
                 myFile.write(data)
                 totaldata += len(data)
             else :
-                self.cl_socket.send("21".encode())
                 myFile.close()
                 break
-            if( totaldata>=size ):
+            print( totaldata, "/", size )
+            if( totaldata >= size ) :#>=size ):
                 self.cl_socket.send("22".encode())
+                break
         print( 'done recv image' )
 
     def _sendSize(self, bits) :
@@ -155,6 +160,7 @@ class CommSocket :
         False   : image size not sent successfully
         """
         msg = "SIZE %s" % len(bits)
+        print( msg )
         self.cl_socket.sendall(msg.encode())
         answer = self.cl_socket.recv(BUFSIZE)
 
@@ -178,9 +184,39 @@ class CommSocket :
         answer = self.cl_socket.recv(BUFSIZE) # get response code
         if( answer.decode() == "22" ): # server successfully received image
             print( "SUCCESS: sent image to server" )
+            print( "testing" )
             return True
         elif( answer.decode() == "21" ): # server failed to receive image
             print( "FAILED: send image to server" )
+        return False
+
+    def _send_if_person_detected(self, message) :
+        """Send a string that determines whether or not a
+        person was found in the image
+
+        Parameters:
+        message:    string value that indicates if a person was found or not
+        """
+        self.cl_socket.sendall(message.encode())
+        answer = self.cl_socket.recv(BUFSIZE)
+        if( answer.decode() == "24" ):
+            print( "SUCCESS: sent %s to client" % message )
+            return True
+        else :
+            print( "FAILED: could not send %s to client" % message )
+        return False
+
+    def _recv_if_person_detected(self) :
+        """Recv a string that determines whether or not a
+        person was found in the image
+        """
+        message = self.cl_socket.recv(BUFSIZE)
+        if( message.decode() == "True" ):
+            print( "Server found person in image" % message )
+            return True
+        else :
+            print( "Server did not find person in image" % message )
+        return False
 
     def close(self) :
         """Close socket for further use"""
@@ -202,7 +238,7 @@ class ServerCommSocket (CommSocket) :
         super().__init__(cl_socket)
         self.imgpath = imgpath
 
-    def run (self, input_q) :
+    def run (self, input_q, output_q, lock) :
         """Method that handles run logic for Server Socket
 
         Parameters:
@@ -212,8 +248,22 @@ class ServerCommSocket (CommSocket) :
         try:
             size = self._recvImgSize()
             self._recvImgData(myFile, size)
+            print( "putting %s in input_q" % self.imgpath )
             input_q.put(self.imgpath)
+            print( "imgpath: ", self.imgpath )
+
+            lock.acquire()
+            print( "Lock Acquired" )
+            contains_person = output_q.get()
+            if contains_person is True :
+                self._send_if_person_detected('True')
+            lock.release()
+            print( "Lock Released" )
+
+            #TODO find way to delete iamge
+
         finally:
+            myFile.close()
             self.close()
         print( "Finished Serverside Socket Communication" )
 
@@ -243,10 +293,11 @@ class ClientCommSocket (CommSocket) :
             bits = myFile.read()
             if( self._sendSize(bits) ):
                 self._sendImgData(bits)
+                print( "made it to the if statement" )
+                if self._recv_if_person_detected() is True :
+                    print( "person has been found in the iamge" )
             else :
                 print( "failed to send size" )
-        except OSError as err :
-            print( "Failed to open file" )
         finally :
             self.close()
         print( "Finished Clientside Socket Communication" )

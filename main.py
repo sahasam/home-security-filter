@@ -26,14 +26,18 @@ def Main() :
     #main loop: whenever queue has something in it, read it and
     #           send it to the odm
     while True :
-        image = input_q.get()
+        imgpath = input_q.get()
         logging.info( "new image in queue detected" )
 
         #create tfmodelthread and start it
         odm = odmodel.odmodel()
-        if ( odm.findPerson(image) ) :
-            logging.info("person has been found")
-        #with the given information, find out if a person is inside
+        if ( odm.findPerson(imgpath) ) :
+            logging.info("person has been found in image %s" % imgpath)
+            output_q.put(True)
+        else :
+            logging.info("person has not been found in image %s" % imgpath)
+            output_q.put(False)
+
 
     print( "Closing" )
 
